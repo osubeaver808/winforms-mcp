@@ -60,14 +60,14 @@ public class IntegrationTestsHeadless
     {
         // Arrange
         _mockAutomation!
-            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false))
+            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false, false))
             .Verifiable();
 
         // Act
-        _mockAutomation.Object.Click(null!, false);
+        _mockAutomation.Object.Click(null!, false, false);
 
         // Assert
-        _mockAutomation.Verify(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false), Times.Once);
+        _mockAutomation.Verify(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false, false), Times.Once);
     }
 
     [Test]
@@ -219,7 +219,7 @@ public class IntegrationTestsHeadless
     {
         // Arrange
         _mockAutomation!
-            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false))
+            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false, false))
             .Verifiable();
 
         _mockAutomation
@@ -233,7 +233,7 @@ public class IntegrationTestsHeadless
         _mockAutomation.Object.Click(btn2!);
 
         // Assert
-        _mockAutomation.Verify(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false), Times.AtLeastOnce);
+        _mockAutomation.Verify(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false, false), Times.AtLeastOnce);
         _mockAutomation.Verify(a => a.FindByName("Button2", null, 5000), Times.Once);
     }
 
@@ -327,7 +327,7 @@ public class IntegrationTestsHeadless
             .Verifiable();
 
         _mockAutomation
-            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false))
+            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false, false))
             .Throws<InvalidOperationException>()
             .Verifiable();
 
@@ -396,7 +396,7 @@ public class IntegrationTestsHeadless
     {
         // Arrange
         _mockAutomation!
-            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false))
+            .Setup(a => a.Click(It.IsAny<FlaUI.Core.AutomationElements.AutomationElement>(), false, false))
             .Throws<InvalidOperationException>()
             .Verifiable();
 
@@ -436,3 +436,4 @@ public class IntegrationTestsHeadless
         );
     }
 }
+

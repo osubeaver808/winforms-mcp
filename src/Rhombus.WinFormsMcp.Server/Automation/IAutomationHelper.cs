@@ -65,7 +65,7 @@ public interface IAutomationHelper : IDisposable
     /// <summary>
     /// Click element
     /// </summary>
-    void Click(AutomationElement element, bool doubleClick = false);
+    void Click(AutomationElement element, bool doubleClick = false, bool rightClick = false);
 
     /// <summary>
     /// Type text into element

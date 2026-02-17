@@ -211,11 +211,15 @@ public class AutomationHelper : IAutomationHelper
     }
 
     /// <summary>
-    /// Click element
+    /// Click element with support for right-click
     /// </summary>
-    public void Click(AutomationElement element, bool doubleClick = false)
+    public void Click(AutomationElement element, bool doubleClick = false, bool rightClick = false)
     {
-        if (doubleClick)
+        if (rightClick)
+        {
+            element.RightClick();
+        }
+        else if (doubleClick)
         {
             element.DoubleClick();
         }
@@ -403,6 +407,200 @@ public class AutomationHelper : IAutomationHelper
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Find all elements by AutomationId
+    /// </summary>
+    public IEnumerable<AutomationElement> FindAllByAutomationId(string automationId, AutomationElement? parent = null, int timeoutMs = 5000)
+    {
+        if (_automation == null)
+            throw new ObjectDisposedException(nameof(AutomationHelper));
+
+        var condition = new PropertyCondition(_automation.PropertyLibrary.Element.AutomationId, automationId);
+        var elements = FindAll(condition, parent, timeoutMs);
+        return elements ?? Array.Empty<AutomationElement>();
+    }
+
+    /// <summary>
+    /// Find all elements by Name
+    /// </summary>
+    public IEnumerable<AutomationElement> FindAllByName(string name, AutomationElement? parent = null, int timeoutMs = 5000)
+    {
+        if (_automation == null)
+            throw new ObjectDisposedException(nameof(AutomationHelper));
+
+        var condition = new PropertyCondition(_automation.PropertyLibrary.Element.Name, name);
+        var elements = FindAll(condition, parent, timeoutMs);
+        return elements ?? Array.Empty<AutomationElement>();
+    }
+
+    /// <summary>
+    /// Find all elements by ClassName
+    /// </summary>
+    public IEnumerable<AutomationElement> FindAllByClassName(string className, AutomationElement? parent = null, int timeoutMs = 5000)
+    {
+        if (_automation == null)
+            throw new ObjectDisposedException(nameof(AutomationHelper));
+
+        var condition = new PropertyCondition(_automation.PropertyLibrary.Element.ClassName, className);
+        var elements = FindAll(condition, parent, timeoutMs);
+        return elements ?? Array.Empty<AutomationElement>();
+    }
+
+    /// <summary>
+    /// Hover over an element
+    /// </summary>
+    public void Hover(AutomationElement element)
+    {
+        var bounds = element.BoundingRectangle;
+        var centerPoint = new Point(
+            (int)(bounds.X + bounds.Width / 2),
+            (int)(bounds.Y + bounds.Height / 2)
+        );
+
+        System.Windows.Forms.Cursor.Position = centerPoint;
+        Thread.Sleep(100);
+    }
+
+    /// <summary>
+    /// Maximize window
+    /// </summary>
+    public void MaximizeWindow(int pid)
+    {
+        var window = GetMainWindow(pid);
+        if (window != null)
+        {
+            var windowPattern = window.Patterns.Window.PatternOrDefault;
+            windowPattern?.SetWindowVisualState(WindowVisualState.Maximized);
+        }
+    }
+
+    /// <summary>
+    /// Minimize window
+    /// </summary>
+    public void MinimizeWindow(int pid)
+    {
+        var window = GetMainWindow(pid);
+        if (window != null)
+        {
+            var windowPattern = window.Patterns.Window.PatternOrDefault;
+            windowPattern?.SetWindowVisualState(WindowVisualState.Minimized);
+        }
+    }
+
+    /// <summary>
+    /// Restore window
+    /// </summary>
+    public void RestoreWindow(int pid)
+    {
+        var window = GetMainWindow(pid);
+        if (window != null)
+        {
+            var windowPattern = window.Patterns.Window.PatternOrDefault;
+            windowPattern?.SetWindowVisualState(WindowVisualState.Normal);
+        }
+    }
+
+    /// <summary>
+    /// Get window title
+    /// </summary>
+    public string GetWindowTitle(int pid)
+    {
+        var window = GetMainWindow(pid);
+        return window?.Name ?? "";
+    }
+
+    /// <summary>
+    /// Get window state
+    /// </summary>
+    public string GetWindowState(int pid)
+    {
+        var window = GetMainWindow(pid);
+        if (window != null)
+        {
+            var windowPattern = window.Patterns.Window.PatternOrDefault;
+            if (windowPattern != null)
+            {
+                return windowPattern.WindowVisualState.ToString();
+            }
+        }
+        return "Unknown";
+    }
+
+    /// <summary>
+    /// Scroll to element
+    /// </summary>
+    public void ScrollToElement(AutomationElement element)
+    {
+        try
+        {
+            var scrollItemPattern = element.Patterns.ScrollItem.PatternOrDefault;
+            scrollItemPattern?.ScrollIntoView();
+        }
+        catch
+        {
+            // If ScrollItem pattern not supported, try to bring into view
+            element.Focus();
+        }
+    }
+
+    /// <summary>
+    /// Scroll window in a direction
+    /// </summary>
+    public void ScrollWindow(AutomationElement element, string direction, int amount)
+    {
+        var scrollPattern = element.Patterns.Scroll.PatternOrDefault;
+        if (scrollPattern == null)
+            throw new InvalidOperationException("Element does not support scrolling");
+
+        var scrollAmount = amount switch
+        {
+            1 => FlaUI.Core.Definitions.ScrollAmount.SmallIncrement,
+            _ => FlaUI.Core.Definitions.ScrollAmount.LargeIncrement
+        };
+
+        switch (direction.ToLower())
+        {
+            case "up":
+                scrollPattern.Scroll(FlaUI.Core.Definitions.ScrollAmount.NoAmount, FlaUI.Core.Definitions.ScrollAmount.SmallDecrement);
+                break;
+            case "down":
+                scrollPattern.Scroll(FlaUI.Core.Definitions.ScrollAmount.NoAmount, scrollAmount);
+                break;
+            case "left":
+                scrollPattern.Scroll(FlaUI.Core.Definitions.ScrollAmount.SmallDecrement, FlaUI.Core.Definitions.ScrollAmount.NoAmount);
+                break;
+            case "right":
+                scrollPattern.Scroll(scrollAmount, FlaUI.Core.Definitions.ScrollAmount.NoAmount);
+                break;
+            default:
+                throw new ArgumentException($"Invalid scroll direction: {direction}");
+        }
+    }
+
+    /// <summary>
+    /// Press key combination (e.g., Ctrl+C, Alt+F4)
+    /// </summary>
+    public void PressKeyCombination(string keys)
+    {
+        // Parse and send key combination
+        // FlaUI doesn't have built-in key combo support, so we use SendKeys
+        var parsedKeys = ParseKeyCombination(keys);
+        System.Windows.Forms.SendKeys.SendWait(parsedKeys);
+    }
+
+    private string ParseKeyCombination(string keys)
+    {
+        // Convert readable format to SendKeys format
+        // E.g., "Ctrl+C" -> "^c", "Alt+F4" -> "%{F4}"
+        var result = keys
+            .Replace("Ctrl+", "^")
+            .Replace("Alt+", "%")
+            .Replace("Shift+", "+")
+            .Replace("Win+", "^{ESC}"); // Windows key approximation
+
+        return result;
     }
 
     public void Dispose()
